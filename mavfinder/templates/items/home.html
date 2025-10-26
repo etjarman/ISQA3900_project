@@ -1,0 +1,10 @@
+{% extends 'items/base.html' %}{% block content %}
+<h4>Recent items</h4><div class='grid'>
+{% for i in items %}
+  <div class='card'>
+    <h5><a href='{% url "items:item_detail" i.pk %}'>{{ i.title }}</a></h5>
+    <p class='muted'>{{ i.status }} • {{ i.category.name }} • {{ i.building|default:'' }}</p>
+    <p>{{ i.description|truncatechars:120 }}</p>
+  </div>
+{% empty %}<p>No items yet. <a href='{% url "items:item_create" %}'>Post one?</a></p>{% endfor %}
+</div>{% endblock %}

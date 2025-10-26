@@ -1,0 +1,29 @@
+{% extends "items/base.html" %}
+{% block content %}
+<h4>Browse Items</h4>
+
+<form method="get" style="display:flex;gap:1rem;align-items:center">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search">
+  <select name="status">
+    <option value="">Any status</option>
+    <option value="LOST"   {% if status == 'LOST' %}selected{% endif %}>Lost</option>
+    <option value="FOUND"  {% if status == 'FOUND' %}selected{% endif %}>Found</option>
+    <option value="CLAIMED"{% if status == 'CLAIMED' %}selected{% endif %}>Claimed</option>
+  </select>
+  <button type="submit">Filter</button>
+</form>
+
+<hr>
+
+<div class="grid">
+  {% for i in items %}
+    <div class="card">
+      <h5><a href="{% url 'items:item_detail' i.pk %}">{{ i.title }}</a></h5>
+      <p class="muted">{{ i.status }} • {{ i.category.name }}</p>
+      <p>{{ i.description|truncatechars:120 }}</p>
+    </div>
+  {% empty %}
+    <p>No results.</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'items/base.html' %}{% block content %}
+<h4>{{ item.title }}</h4>
+<p class='muted'>{{ item.status }} • {{ item.category.name }} • {{ item.building|default:'' }} {{ item.room_or_area|default:'' }}</p>
+<p>{{ item.description }}</p>
+{% if matches %}
+  <h5>Potential Matches</h5>
+  <ul>
+  {% for m in matches %}
+    {% if item.status == 'LOST' %}
+      <li>Found: <a href='{% url "items:item_detail" m.found_item.pk %}'>{{ m.found_item.title }}</a> (score {{ m.score }})</li>
+    {% else %}
+      <li>Lost: <a href='{% url "items:item_detail" m.lost_item.pk %}'>{{ m.lost_item.title }}</a> (score {{ m.score }})</li>
+    {% endif %}
+  {% endfor %}
+  </ul>
+{% endif %}
+{% endblock %}

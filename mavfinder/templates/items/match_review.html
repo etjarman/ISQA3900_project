@@ -1,0 +1,18 @@
+{% extends 'items/base.html' %}{% block content %}
+<h4>Admin: Match Review</h4>
+<table>
+  <thead><tr><th>Lost</th><th>Found</th><th>Score</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for m in matches %}
+    <tr>
+      <td><a href='{% url "items:item_detail" m.lost_item.pk %}'>{{ m.lost_item.title }}</a></td>
+      <td><a href='{% url "items:item_detail" m.found_item.pk %}'>{{ m.found_item.title }}</a></td>
+      <td>{{ m.score }}</td>
+      <td>{{ m.status }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan='4'>No pending matches.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

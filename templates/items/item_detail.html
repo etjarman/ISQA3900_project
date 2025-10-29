@@ -1,7 +1,14 @@
 {% extends 'items/base.html' %}{% block content %}
-<h4>{{ item.title }}</h4>
-<p class='muted'>{{ item.status }} • {{ item.category.name }} • {{ item.building|default:'' }} {{ item.room_or_area|default:'' }}</p>
+
+{% if item.photo %}
+  <img src="{{ item.photo.url }}" alt="{{ item.title }}"
+       style="max-width:320px;height:auto;border-radius:8px;margin-bottom:1rem;">
+{% endif %}
+
+<h2>{{ item.title }}</h2>
+<p class="muted">{{ item.status }} &bull; {{ item.category.name }} &bull; {{ item.building }}</p>
 <p>{{ item.description }}</p>
+
 {% if matches %}
   <h5>Potential Matches</h5>
   <ul>

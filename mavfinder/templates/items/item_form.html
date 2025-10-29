@@ -1,7 +1,0 @@
-{% extends 'items/base.html' %}{% block content %}
-<h4>Post Lost/Found Item</h4>
-<form method='post' enctype='multipart/form-data'>
-  {% csrf_token %} {{ form.as_p }}
-  <button type='submit'>Submit</button>
-</form>
-{% endblock %}

@@ -3,7 +3,7 @@
 {% for i in items %}
   <div class='card'>
     <h5><a href='{% url "items:item_detail" i.pk %}'>{{ i.title }}</a></h5>
-    <p class='muted'>{{ i.status }} • {{ i.category.name }} • {{ i.building|default:'' }}</p>
+        <p class="muted">{{ i.status }} &bull; {{ i.category.name }} &bull; {{ i.building|default:"" }}</p>
     <p>{{ i.description|truncatechars:120 }}</p>
   </div>
 {% empty %}<p>No items yet. <a href='{% url "items:item_create" %}'>Post one?</a></p>{% endfor %}

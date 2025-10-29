@@ -18,10 +18,15 @@
 <div class="grid">
   {% for i in items %}
     <div class="card">
-      <h5><a href="{% url 'items:item_detail' i.pk %}">{{ i.title }}</a></h5>
-      <p class="muted">{{ i.status }} • {{ i.category.name }}</p>
-      <p>{{ i.description|truncatechars:120 }}</p>
+        {% if i.photo %}
+            <img src="{{ i.photo.url }}" alt="{{ i.title }}"
+                style="width:100%;height:180px;object-fit:cover;border-radius:8px;margin-bottom:0.5rem;">
+        {% endif %}
+        <h5><a href="{% url 'items:item_detail' i.pk %}">{{ i.title }}</a></h5>
+        <p class="muted">{{ i.status }} &bull; {{ i.category.name }} &bull; {{ i.building|default:'' }}</p>
+        <p>{{ i.description|truncatechars:120 }}</p>
     </div>
+
   {% empty %}
     <p>No results.</p>
   {% endfor %}

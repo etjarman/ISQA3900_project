@@ -4,9 +4,11 @@ from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.db.models import Q
+from django.http import HttpResponseForbidden
 from .models import Item, Match
-from .forms import ItemForm
+from .forms import ItemForm, ProfileForm
 from .matching import find_matches_for
+from .forms_auth import SignupForm
 
 def home(request):
     items = Item.objects.filter(approved=True)[:12]
@@ -60,3 +62,55 @@ def signup(request):
     else:
         form = UserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
+
+def signup(request):
+    if request.method == "POST":
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            from django.contrib.auth import login
+            login(request, user)
+            return redirect("items:home")
+    else:
+        form = SignupForm()
+    return render(request, "registration/signup.html", {"form": form})
+
+@login_required
+def my_account(request):
+    """Account dashboard: update profile + see/manage your own items."""
+    if request.method == "POST":
+        form = ProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Account updated.")
+            return redirect("items:account")
+    else:
+        form = ProfileForm(instance=request.user)
+
+    my_items = Item.objects.filter(owner=request.user).order_by("-date_reported")
+    return render(request, "account/dashboard.html", {"form": form, "my_items": my_items})
+
+@login_required
+def item_update(request, pk):
+    """Owner-only edit."""
+    item = get_object_or_404(Item, pk=pk)
+    if not (request.user.is_staff or item.owner_id == request.user.id):
+        return HttpResponseForbidden("You can only edit your own items.")
+    if request.method == "POST":
+        form = ItemForm(request.POST, request.FILES, instance=item)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Item updated.")
+            return redirect("items:item_detail", pk=item.pk)
+    else:
+        form = ItemForm(instance=item)
+    return render(request, "items/item_form.html", {"form": form, "item": item, "is_edit": True})
+
+@login_required
+def item_delete(request, pk):
+    item = get_object_or_404(Item, pk=pk)
+    if not (request.user.is_staff or item.owner_id == request.user.id):
+        return HttpResponseForbidden("You can only delete your own items.")
+    item.delete()
+    messages.success(request, "Item deleted.")
+    return redirect("items:account")

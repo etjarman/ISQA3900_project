@@ -1,0 +1,19 @@
+{% extends "items/base.html" %}
+{% block content %}
+<h4>Sign in</h4>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+
+  {% if next %}
+    <input type="hidden" name="next" value="{{ next }}">
+  {% else %}
+    <input type="hidden" name="next" value="{% url 'items:home' %}">
+  {% endif %}
+
+  <button type="submit">Login</button>
+</form>
+<p class="muted" style="margin-top:1rem">
+  Don’t have an account? <a href="{% url 'signup' %}">Create one</a>.
+</p>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends 'items/base.html' %}
+{% block content %}
+<h4>{% if is_edit %}Edit Item{% else %}Post Lost/Found Item{% endif %}</h4>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">{% if is_edit %}Save{% else %}Submit{% endif %}</button>
+</form>
+{% endblock %}

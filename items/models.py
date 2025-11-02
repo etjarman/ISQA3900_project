@@ -29,7 +29,7 @@ class Item(models.Model):
 
     photo = models.ImageField(upload_to='items/', blank=True, null=True)
 
-    approved = models.BooleanField(default=True)
+    approved = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta: ordering = ['-date_reported']

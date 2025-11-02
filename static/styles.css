@@ -3,13 +3,15 @@ body {
     background-color: #f2f2f2;
     margin: 0;
     padding: 0;
+    max-width: none;
 }
 
 header {
     background-color: #333;
-    color: white;
-    padding: 20px;
-    text-align: center;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 nav a {

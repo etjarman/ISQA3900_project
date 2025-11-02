@@ -4,11 +4,15 @@ from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.db.models import Q
+from django.db import transaction
 from django.http import HttpResponseForbidden
 from .models import Item, Match
 from .forms import ItemForm, ProfileForm
 from .matching import find_matches_for
 from .forms_auth import SignupForm
+import logging
+
+logger = logging.getLogger(__name__)
 
 def home(request):
     items = Item.objects.filter(approved=True)[:12]
@@ -23,20 +27,37 @@ def item_list(request):
 
 @login_required
 def item_create(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = ItemForm(request.POST, request.FILES)
         if form.is_valid():
-            item = form.save(commit=False); item.owner = request.user; item.save()
-            for other, score in find_matches_for(item):
-                if item.status == 'LOST':
-                    Match.objects.get_or_create(lost_item=item, found_item=other, defaults={'score': score})
-                else:
-                    Match.objects.get_or_create(lost_item=other, found_item=item, defaults={'score': score})
-            messages.success(request, 'Item posted successfully.')
-            return redirect('items:item_detail', pk=item.pk)
+            try:
+                with transaction.atomic():
+                    item = form.save(commit=False)
+                    item.owner = request.user
+                    # New posts start unapproved
+                    item.save()
+                    try:
+                        # Only compare against approved items
+                        for other, score in find_matches_for(item, include_unapproved=False):
+                            if item.status == "LOST":
+                                Match.objects.get_or_create(lost_item=item, found_item=other, defaults={"score": score})
+                            else:
+                                Match.objects.get_or_create(lost_item=other, found_item=item, defaults={"score": score})
+                    except Exception as e:
+                        logger.exception("Match generation failed for item %s: %s", item.pk, e)
+                        messages.warning(request, "Item posted, but match generation will run later.")
+
+                messages.success(request, "Item posted successfully and awaiting approval.")
+                return redirect("items:item_detail", pk=item.pk)
+
+            except Exception as e:
+                logger.exception("Create item failed: %s", e)
+                messages.error(request, f"Could not save item: {e}")
+        # invalid form OR exception
+        return render(request, "items/item_form.html", {"form": form})
     else:
         form = ItemForm()
-    return render(request, 'items/item_form.html', {'form': form})
+    return render(request, "items/item_form.html", {"form": form})
 
 def item_detail(request, pk):
     item = get_object_or_404(Item, pk=pk)

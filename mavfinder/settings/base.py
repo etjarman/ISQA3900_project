@@ -4,7 +4,7 @@ import os
 BASE_DIR = Path(__file__).resolve().parents[2]
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-insecure-secret-key')
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 LOGIN_REDIRECT_URL = '/'
@@ -79,3 +79,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Dev-friendly email: prints emails to your terminal
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "mavfinder@localhost"
+
+

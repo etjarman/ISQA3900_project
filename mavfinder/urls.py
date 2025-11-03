@@ -8,6 +8,10 @@ from items import views as item_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root':
+    settings.MEDIA_ROOT}), #serve media files when deployed
+    re_path(r'^static/(?P<path>.*)$', serve, {'document_root':
+    settings.STATIC_ROOT}), #serve static files when deployed
 
     # Auth
     path('accounts/', include('django.contrib.auth.urls')),

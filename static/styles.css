@@ -20,6 +20,16 @@ nav a {
     text-decoration: none;
 }
 
+h3 {
+    padding-left: 20px;
+    padding-top: 15px;
+}
+
+.pill {
+    color: dimgray;
+    padding: 10px;
+}
+
 section {
     padding: 20px;
 }

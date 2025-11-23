@@ -36,13 +36,25 @@ class Item(models.Model):
     def __str__(self): return f'{self.title} ({self.status})'
 
 class Match(models.Model):
-    lost_item  = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='lost_matches')
-    found_item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='found_matches')
-    score = models.FloatField(default=0.0)
-    status = models.CharField(max_length=20, default='PENDING')  # PENDING|NOTIFIED|DISMISSED|CONFIRMED
+    PENDING = "PENDING"
+    CONFIRMED = "CONFIRMED"
+    REJECTED = "REJECTED"
+
+    STATUS_CHOICES = [
+        (PENDING, "Pending"),
+        (CONFIRMED, "Confirmed"),
+        (REJECTED, "Rejected"),
+    ]
+
+    lost_item = models.ForeignKey(Item, related_name="lost_matches", on_delete=models.CASCADE)
+    found_item = models.ForeignKey(Item, related_name="found_matches", on_delete=models.CASCADE)
+    score = models.FloatField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
-    class Meta: unique_together = ('lost_item','found_item')
-    def __str__(self): return f'Match {self.lost_item_id}?{self.found_item_id} ({self.score})'
+
+    def __str__(self):
+        return f"{self.lost_item} ↔ {self.found_item} ({self.score})"
+
 
 class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')

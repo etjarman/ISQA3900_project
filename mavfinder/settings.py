@@ -50,6 +50,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'mavfinder.urls'
+WSGI_APPLICATION = "mavfinder.wsgi.application"
 
 TEMPLATES = [
     {

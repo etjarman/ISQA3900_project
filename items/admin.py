@@ -1,7 +1,7 @@
 from django.contrib import admin, messages
 from django.db import transaction
 from .models import Category, Item, Match, Message
-from .matching import find_matches_for
+from .matching import find_matches_for, explain_match
 import logging
 
 log = logging.getLogger(__name__)
@@ -12,15 +12,19 @@ class CategoryAdmin(admin.ModelAdmin):
 
 class LostMatchInline(admin.TabularInline):
     model = Match
-    fk_name = 'lost_item'
+    fk_name = "lost_item"
     extra = 0
-    readonly_fields = ('found_item', 'score', 'status', 'created_at',)
+    can_delete = False
+    readonly_fields = ("found_item", "score", "status")
+
 
 class FoundMatchInline(admin.TabularInline):
     model = Match
-    fk_name = 'found_item'
+    fk_name = "found_item"
     extra = 0
-    readonly_fields = ('lost_item', 'score', 'status', 'created_at',)
+    can_delete = False
+    readonly_fields = ("lost_item", "score", "status")
+
 
 def approve_items(modeladmin, request, queryset):
     """
@@ -75,9 +79,17 @@ class ItemAdmin(admin.ModelAdmin):
 
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
-    list_display = ('id','lost_item','found_item','score','status','created_at')
-    list_filter  = ('status',)
-    search_fields = ('lost_item__title','found_item__title')
+    list_display = ('id', 'lost_item', 'found_item', 'score', 'status', 'created_at')
+    list_filter = ('status',)
+    search_fields = ('lost_item__title', 'found_item__title')
+
+    readonly_fields = ('explanation',)
+
+    def explanation(self, obj):
+        """Show why this lost/found pair matched."""
+        return explain_match(obj.lost_item, obj.found_item)
+
+    explanation.short_description = "Match criteria"
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):

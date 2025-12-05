@@ -11,4 +11,6 @@ urlpatterns = [
   path('items/<int:pk>/delete/', views.item_delete, name='item_delete'),
   path('account/', views.my_account, name='account'),
   path('admin-review/matches/', views.match_review, name='match_review'),
+  path("staff/review-items/", views.review_items, name="review_items"),
+
 ]

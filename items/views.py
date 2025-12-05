@@ -2,10 +2,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.db.models import Q
 from django.db import transaction
 from django.http import HttpResponseForbidden
+from django.shortcuts import render, redirect
 from .models import Item, Match
 from .forms import ItemForm, ProfileForm
 from .matching import find_matches_for
@@ -135,3 +137,79 @@ def item_delete(request, pk):
     item.delete()
     messages.success(request, "Item deleted.")
     return redirect("items:account")
+
+@staff_member_required
+def review_items(request):
+    """
+    Staff-only front-end page to:
+    - Review unapproved items and approve them
+    - See potential matches for pending items
+    - See matches for approved items and update match.status
+    """
+    pending_items = Item.objects.filter(approved=False).order_by("-date_reported")
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "approve":
+            ids = request.POST.getlist("item_ids")
+            if not ids:
+                messages.warning(request, "No items selected for approval.")
+            else:
+                qs = Item.objects.filter(id__in=ids)
+                count = qs.update(approved=True)
+                messages.success(request, f"Approved {count} item(s).")
+
+        updated_matches = 0
+        valid_statuses = {Match.PENDING, Match.CONFIRMED, Match.REJECTED}
+        for key, value in request.POST.items():
+            if not key.startswith("match_status_"):
+                continue
+            if not value:
+                continue
+
+            match_id = key.replace("match_status_", "", 1)
+            try:
+                match_obj = Match.objects.get(id=match_id)
+            except Match.DoesNotExist:
+                continue
+
+            if value in valid_statuses and match_obj.status != value:
+                match_obj.status = value
+                match_obj.save(update_fields=["status"])
+                updated_matches += 1
+
+        if updated_matches:
+            messages.success(request, f"Updated {updated_matches} match(es).")
+
+        return redirect("items:review_items")
+
+    # Pending items + potential matches
+    items_with_matches = []
+    for item in pending_items:
+        raw_matches = find_matches_for(item, include_unapproved=True)
+        items_with_matches.append({
+            "item": item,
+            "matches": [
+                {"item": m[0], "score": m[1]}
+                for m in raw_matches[:5]
+            ],
+        })
+
+    # Approved items + existing matched items
+    approved_items = Item.objects.filter(approved=True).order_by("-date_reported")
+    approved_items_with_matches = []
+    for item in approved_items:
+        matches = Match.objects.filter(
+            Q(lost_item=item) | Q(found_item=item)
+        ).select_related("lost_item", "found_item").order_by("-score")
+        approved_items_with_matches.append({
+            "item": item,
+            "matches": matches,
+        })
+
+    context = {
+        "items_with_matches": items_with_matches,
+        "approved_items_with_matches": approved_items_with_matches,
+    }
+    return render(request, "items/review_items.html", context)

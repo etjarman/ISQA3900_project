@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.conf import settings
+from django.utils import timezone
 User = get_user_model()
 
 class Category(models.Model):
@@ -64,3 +66,33 @@ class Message(models.Model):
     sent_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
     def __str__(self): return f'Msg {self.id} on {self.item_id}'
+
+class Notification(models.Model):
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="mavfinder_notifications",
+    )
+    match = models.ForeignKey(
+        "Match",
+        on_delete=models.CASCADE,
+        related_name="notifications",
+        null=True,
+        blank=True,
+    )
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    url = models.CharField(max_length=300, blank=True, default="")  # link inside app (optional)
+
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_mavfinder_notifications",
+    )
+
+    def __str__(self):
+        return f"Notif to {self.recipient} - {self.title}"

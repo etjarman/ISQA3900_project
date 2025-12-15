@@ -1,0 +1,22 @@
+{% extends "items/base.html" %}
+
+{% block content %}
+<h2>Notifications</h2>
+
+{% if notifications %}
+  <ul>
+    {% for n in notifications %}
+      <li style="margin-bottom: 1rem;">
+        <strong>{% if not n.is_read %}🟢{% else %}⚪{% endif %} {{ n.title }}</strong><br>
+        <div class="muted">{{ n.created_at }}</div>
+        <pre style="white-space: pre-wrap;">{{ n.message }}</pre>
+        <a href="{% url 'items:notification_mark_read' n.id %}">
+          {% if n.url %}Open{% else %}Mark read{% endif %}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="muted">No notifications yet.</p>
+{% endif %}
+{% endblock %}

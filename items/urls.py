@@ -12,5 +12,8 @@ urlpatterns = [
   path('account/', views.my_account, name='account'),
   path('admin-review/matches/', views.match_review, name='match_review'),
   path("staff/review-items/", views.review_items, name="review_items"),
+  path("staff/notify-match/<int:match_id>/", views.notify_match, name="notify_match"),
+  path("notifications/", views.notifications, name="notifications"),
+  path("notifications/<int:notif_id>/read/", views.notification_mark_read, name="notification_mark_read"),
 
 ]

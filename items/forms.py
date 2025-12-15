@@ -42,3 +42,6 @@ class ProfileForm(forms.ModelForm):
         model = User
         fields = ["first_name", "last_name", "email"]
 
+class NotifyMatchForm(forms.Form):
+    title = forms.CharField(max_length=200)
+    message = forms.CharField(widget=forms.Textarea(attrs={"rows": 7}))

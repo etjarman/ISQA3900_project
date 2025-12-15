@@ -13,6 +13,7 @@
 <body>
 <header><h3><a href='{% url "items:home" %}'>MavFinder</a></h3>
 <nav>
+
   <a href="{% url 'items:item_list' %}">Browse</a>
 
   {% if request.user.is_authenticated %}
@@ -23,6 +24,13 @@
       <a href="{% url 'items:review_items' %}">Admin Review</a>
     {% endif %}
 
+      <a href="{% url 'items:notifications' %}">
+          Notifications
+          {% if unread_notifications_count > 0 %}
+              <span class="notif-badge">{{ unread_notifications_count }}</span>
+          {% endif %}
+      </a>
+
     <span class="pill">{{ request.user.username }}</span>
     <a href="{% url 'logout' %}">Logout</a>
 
@@ -30,6 +38,10 @@
     <a href="{% url 'login' %}">Login</a>
     <a href="{% url 'signup' %}">Sign up</a>
   {% endif %}
+
+
+
+
 </nav>
 
 </header>

@@ -4,12 +4,14 @@ from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
+from django.core.mail import send_mail
 from django.db.models import Q
 from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
-from .models import Item, Match
-from .forms import ItemForm, ProfileForm
+from django.urls import reverse
+from .models import Item, Match, Notification
+from .forms import ItemForm, ProfileForm, NotifyMatchForm
 from .matching import find_matches_for
 from .forms_auth import SignupForm
 import logging
@@ -138,6 +140,20 @@ def item_delete(request, pk):
     messages.success(request, "Item deleted.")
     return redirect("items:account")
 
+@login_required
+def notifications(request):
+    qs = Notification.objects.filter(recipient=request.user).order_by("-created_at")
+    return render(request, "items/notifications.html", {"notifications": qs})
+
+@login_required
+def notification_mark_read(request, notif_id):
+    n = get_object_or_404(Notification, id=notif_id, recipient=request.user)
+    n.is_read = True
+    n.save(update_fields=["is_read"])
+    if n.url:
+        return redirect(n.url)
+    return redirect("items:notifications")
+
 @staff_member_required
 def review_items(request):
     """
@@ -213,3 +229,58 @@ def review_items(request):
         "approved_items_with_matches": approved_items_with_matches,
     }
     return render(request, "items/review_items.html", context)
+
+@staff_member_required
+def notify_match(request, match_id):
+    match = get_object_or_404(
+        Match.objects.select_related("lost_item__owner", "found_item__owner"),
+        id=match_id
+    )
+
+    lost_owner = getattr(match.lost_item, "owner", None)
+    found_owner = getattr(match.found_item, "owner", None)
+
+    recipients = []
+    if lost_owner:
+        recipients.append(lost_owner)
+    if found_owner and found_owner not in recipients:
+        recipients.append(found_owner)
+
+    if not recipients:
+        messages.error(request, "This match has no associated users to notify.")
+        return redirect("items:review_items")
+
+    default_title = "Possible match found for your item"
+
+    match_url = reverse("items:item_detail", args=[match.lost_item.id])
+
+    default_message = (
+        f"A potential match was found:\n"
+        f"- Lost: {match.lost_item.title}\n"
+        f"- Found: {match.found_item.title}\n"
+        f"- Score: {match.score}\n\n"
+        f"Open the item page to review details."
+    )
+
+    if request.method == "POST":
+        form = NotifyMatchForm(request.POST)
+        if form.is_valid():
+            title = form.cleaned_data["title"]
+            message_text = form.cleaned_data["message"]
+
+            for u in recipients:
+                Notification.objects.create(
+                    recipient=u,
+                    match=match,
+                    title=title,
+                    message=message_text,
+                    url=match_url,
+                    created_by=request.user,
+                )
+
+            messages.success(request, f"In-app notification created for {len(recipients)} user(s).")
+            return redirect("items:review_items")
+    else:
+        form = NotifyMatchForm(initial={"title": default_title, "message": default_message})
+
+    return render(request, "items/notify_match.html", {"match": match, "form": form, "recipients": recipients})

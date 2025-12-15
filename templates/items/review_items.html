@@ -137,6 +137,7 @@
                       <th>Other item(s)</th>
                       <th>Score</th>
                       <th>Match status</th>
+                      <th>Notify</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -161,6 +162,14 @@
                           <option value="REJECTED" {% if match.status == "REJECTED" %}selected{% endif %}>Rejected</option>
                         </select>
                       </td>
+                      <td>
+                          {% if match.status == "CONFIRMED" %}
+                              <a href="{% url 'items:notify_match' match.id %}">Notify</a>
+                          {% else %}
+                              <span class="text-muted">—</span>
+                          {% endif %}
+                      </td>
+
                     </tr>
                     {% endfor %}
                   </tbody>

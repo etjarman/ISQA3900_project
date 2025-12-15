@@ -1,0 +1,25 @@
+{% extends "items/base.html" %}
+
+{% block content %}
+<h2>Create in-app notification</h2>
+
+<p class="muted">
+  <strong>Lost:</strong> {{ match.lost_item.title }}<br>
+  <strong>Found:</strong> {{ match.found_item.title }}<br>
+  <strong>Score:</strong> {{ match.score }}
+</p>
+
+<p>
+  <strong>Recipients:</strong>
+  {% for u in recipients %}
+    {{ u.username }}{% if not forloop.last %}, {% endif %}
+  {% endfor %}
+</p>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Create notification</button>
+  <a href="{% url 'items:review_items' %}" style="margin-left: 1rem;">Cancel</a>
+</form>
+{% endblock %}

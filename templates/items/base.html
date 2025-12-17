@@ -26,6 +26,8 @@
 
       <a href="{% url 'items:notifications' %}">
           Notifications
+
+
           {% if unread_notifications_count > 0 %}
               <span class="notif-badge">{{ unread_notifications_count }}</span>
           {% endif %}
@@ -38,9 +40,6 @@
     <a href="{% url 'login' %}">Login</a>
     <a href="{% url 'signup' %}">Sign up</a>
   {% endif %}
-
-
-
 
 </nav>
 

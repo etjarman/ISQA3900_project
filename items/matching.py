@@ -54,57 +54,70 @@ def candidate_queryset(new_item, include_unapproved=False):
     return qs.order_by("-date_reported")[:50]
 
 
+def item_score_breakdown(a, b):
+
+    breakdown = {
+        "building": 0.0,
+        "color": 0.0,
+        "brand_model_tokens": 0.0,
+        "title_desc_fuzzy": 0.0,
+        "date_proximity": 0.0,
+        "room_tokens": 0.0,
+        "total": 0.0,
+    }
+
+    # building (20)
+    if (a.building or "").strip().lower() and (a.building or "").strip().lower() == (b.building or "").strip().lower():
+        breakdown["building"] = 20.0
+
+    # color (15)
+    if a.color_primary and b.color_primary and a.color_primary.strip().lower() == b.color_primary.strip().lower():
+        breakdown["color"] = 15.0
+
+    # brand/model token overlap (max 25)
+    brand_score = jaccard(norm(a.brand), norm(b.brand))
+    model_score = jaccard(norm(a.model_or_markings), norm(b.model_or_markings))
+    breakdown["brand_model_tokens"] = round(25.0 * max(brand_score, model_score), 2)
+
+    # title/description fuzzy (max 20)
+    title_score = fuzzy(a.title, b.title)
+    desc_score = fuzzy(a.description, b.description)
+    breakdown["title_desc_fuzzy"] = round(20.0 * max(title_score, desc_score), 2)
+
+    # date proximity (max 10)
+    breakdown["date_proximity"] = round(10.0 * days_prox(a.date_lost_or_found, b.date_lost_or_found), 2)
+
+    # room/area tokens (max 10)
+    breakdown["room_tokens"] = round(10.0 * jaccard(norm(a.room_or_area), norm(b.room_or_area)), 2)
+
+    total = (
+        breakdown["building"]
+        + breakdown["color"]
+        + breakdown["brand_model_tokens"]
+        + breakdown["title_desc_fuzzy"]
+        + breakdown["date_proximity"]
+        + breakdown["room_tokens"]
+    )
+    breakdown["total"] = round(total, 1)
+    return breakdown
+
+
 def item_score(a, b):
-    """
-    Compute a similarity score between two items.
-    Typical “good match” is ≥ 40.
-    """
-    s = 0.0
-
-    # Building match (strong context signal)
-    if (a.building or "").lower() == (b.building or "").lower():
-        s += 20
-
-    # Exact color match
-    if a.color_primary and b.color_primary and a.color_primary.lower() == b.color_primary.lower():
-        s += 15
-
-    # Brand / model Jaccard – strong but not decisive
-    brand_sim = jaccard(norm(a.brand), norm(b.brand))
-    model_sim = jaccard(norm(a.model_or_markings), norm(b.model_or_markings))
-    s += 25 * max(brand_sim, model_sim)
-
-    # Title / description fuzzy match
-    title_sim = fuzzy(a.title, b.title)
-    desc_sim = fuzzy(a.description, b.description)
-    s += 20 * max(title_sim, desc_sim)
-
-    # Date proximity (up to +10)
-    s += 10 * days_prox(a.date_lost_or_found, b.date_lost_or_found)
-
-    # Room similarity (Jaccard)
-    s += 10 * jaccard(norm(a.room_or_area), norm(b.room_or_area))
-
-    return round(s, 1)
+    return item_score_breakdown(a, b)["total"]
 
 
-def find_matches_for(new_item, include_unapproved=False, threshold=40.0):
-    """
-    Tweak threshold here
-    Return list of (candidate_item, score) pairs whose score ≥ threshold.
-    """
-    matches = []
-    for candidate in candidate_queryset(new_item, include_unapproved=include_unapproved):
-        score = item_score(new_item, candidate)
-        if score >= threshold:
-            matches.append((candidate, score))
-    return matches
+
+def find_matches_for(new_item, include_unapproved=False):
+    results = []
+    for c in candidate_queryset(new_item, include_unapproved=include_unapproved):
+        bd = item_score_breakdown(new_item, c)
+        if bd["total"] >= 40:
+            results.append((c, bd["total"], bd))
+    return results
+
 
 def explain_match(a, b):
-    """
-    Return an explanation of why two items matched,
-    based on the same logic used in item_score.
-    """
+
     details = []
     total = 0.0
 

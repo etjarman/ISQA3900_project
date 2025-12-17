@@ -130,53 +130,76 @@
             <td>{{ item.building|default:"—" }}</td>
             <td>{{ item.date_lost_or_found|date:"Y-m-d" }}</td>
             <td>
-              {% if matches %}
-                <table class="table table-sm small mb-0">
-                  <thead>
-                    <tr>
-                      <th>Other item(s)</th>
-                      <th>Score</th>
-                      <th>Match status</th>
-                      <th>Notify</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for match in matches %}
-                    <tr>
-                      <td>
-                        Lost:
-                        <a href="{% url 'items:item_detail' match.lost_item.id %}">
-                          {{ match.lost_item.title }}
-                        </a><br>
-                        Found:
-                        <a href="{% url 'items:item_detail' match.found_item.id %}">
-                          {{ match.found_item.title }}
-                        </a>
-                      </td>
-                      <td>{{ match.score }}</td>
-                      <td>
-                        <select name="match_status_{{ match.id }}">
-                          <option value="">(no change)</option>
-                          <option value="PENDING"  {% if match.status == "PENDING"  %}selected{% endif %}>Pending</option>
-                          <option value="CONFIRMED" {% if match.status == "CONFIRMED" %}selected{% endif %}>Confirmed</option>
-                          <option value="REJECTED" {% if match.status == "REJECTED" %}selected{% endif %}>Rejected</option>
-                        </select>
-                      </td>
-                      <td>
-                          {% if match.status == "CONFIRMED" %}
-                              <a href="{% url 'items:notify_match' match.id %}">Notify</a>
-                          {% else %}
-                              <span class="text-muted">—</span>
-                          {% endif %}
-                      </td>
+                {% if matches %}
+                    <table class="table table-sm small mb-0">
+                        <thead>
+                        <tr>
+                            <th>Other item(s)</th>
+                            <th>Score</th>
+                            <th>Why?</th>
+                            <th>Match status</th>
+                            <th>Notify</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for match in matches %}
+                            <tr>
+                                <td>
+                                    Lost:
+                                    <a href="{% url 'items:item_detail' match.lost_item.id %}">
+                                        {{ match.lost_item.title }}
+                                    </a><br>
+                                    Found:
+                                    <a href="{% url 'items:item_detail' match.found_item.id %}">
+                                        {{ match.found_item.title }}
+                                    </a>
+                                </td>
 
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              {% else %}
-                <span class="text-muted small">No matches recorded yet.</span>
-              {% endif %}
+                                <td><strong>{{ match.score }}</strong></td>
+
+                                <td style="min-width:220px;">
+                                    {% if match.score_breakdown %}
+                                        <details>
+                                            <summary>View breakdown</summary>
+                                            <ul style="margin:.25rem 0 0 1rem;">
+                                                <li>Building: {{ match.score_breakdown.building }}</li>
+                                                <li>Color: {{ match.score_breakdown.color }}</li>
+                                                <li>Brand/Model tokens: {{ match.score_breakdown.brand_model_tokens }}</li>
+                                                <li>Title/Desc fuzzy: {{ match.score_breakdown.title_desc_fuzzy }}</li>
+                                                <li>Date proximity: {{ match.score_breakdown.date_proximity }}</li>
+                                                <li>Room tokens: {{ match.score_breakdown.room_tokens }}</li>
+                                                <li><strong>Total:</strong> {{ match.score_breakdown.total }}</li>
+                                            </ul>
+                                        </details>
+                                    {% else %}
+                                        <span class="text-muted">No breakdown saved</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <select name="match_status_{{ match.id }}">
+                                        <option value="">(no change)</option>
+                                        <option value="PENDING"  {% if match.status == "PENDING"  %}selected{% endif %}>Pending</option>
+                                        <option value="CONFIRMED" {% if match.status == "CONFIRMED" %}selected{% endif %}>Confirmed</option>
+                                        <option value="REJECTED" {% if match.status == "REJECTED" %}selected{% endif %}>Rejected</option>
+                                    </select>
+                                </td>
+
+                                <td>
+                                    {% if match.status == "CONFIRMED" %}
+                                        <a href="{% url 'items:notify_match' match.id %}">Notify</a>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <span class="text-muted small">No matches recorded yet.</span>
+                {% endif %}
+
             </td>
           </tr>
           {% endwith %}

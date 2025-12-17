@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'items',
 ]
 
 MIDDLEWARE = [
@@ -126,7 +127,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 import os
-MEDIA_URL = 'media/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+STATIC_ROOT = BASE_DIR / 'static'
+MEDIA_ROOT = BASE_DIR / 'media'
 

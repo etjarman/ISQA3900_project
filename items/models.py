@@ -51,6 +51,8 @@ class Match(models.Model):
     lost_item = models.ForeignKey(Item, related_name="lost_matches", on_delete=models.CASCADE)
     found_item = models.ForeignKey(Item, related_name="found_matches", on_delete=models.CASCADE)
     score = models.FloatField()
+    score_breakdown = models.JSONField(default=dict, blank=True)
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -82,7 +84,7 @@ class Notification(models.Model):
     )
     title = models.CharField(max_length=200)
     message = models.TextField()
-    url = models.CharField(max_length=300, blank=True, default="")  # link inside app (optional)
+    url = models.CharField(max_length=300, blank=True, default="")
 
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
@@ -96,3 +98,30 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notif to {self.recipient} - {self.title}"
+
+class Profile(models.Model):
+    CONTACT_EMAIL = "EMAIL"
+    CONTACT_PHONE = "PHONE"
+    CONTACT_INAPP = "INAPP"
+
+    CONTACT_CHOICES = [
+        (CONTACT_EMAIL, "Email"),
+        (CONTACT_PHONE, "Phone (text/call)"),
+        (CONTACT_INAPP, "In-app only"),
+    ]
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="profile",
+    )
+
+    phone_number = models.CharField(max_length=30, blank=True, default="")
+    preferred_contact_method = models.CharField(
+        max_length=10,
+        choices=CONTACT_CHOICES,
+        default=CONTACT_EMAIL,
+    )
+
+    def __str__(self):
+        return f"Profile: {self.user.username}"

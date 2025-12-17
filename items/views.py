@@ -10,8 +10,8 @@ from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from .models import Item, Match, Notification
-from .forms import ItemForm, ProfileForm, NotifyMatchForm
+from .models import Item, Match, Notification, Profile
+from .forms import ItemForm, ProfileForm, NotifyMatchForm, UserProfileForm
 from .matching import find_matches_for
 from .forms_auth import SignupForm
 import logging
@@ -102,22 +102,35 @@ def signup(request):
 
 @login_required
 def my_account(request):
-    """Account dashboard: update profile + see/manage your own items."""
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
     if request.method == "POST":
-        form = ProfileForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Account updated.")
+        user_form = ProfileForm(request.POST, instance=request.user)
+        prof_form = UserProfileForm(request.POST, instance=profile)
+
+        if user_form.is_valid() and prof_form.is_valid():
+            user_form.save()
+            prof_form.save()
+            messages.success(request, "Account information updated.")
             return redirect("items:account")
     else:
-        form = ProfileForm(instance=request.user)
+        user_form = ProfileForm(instance=request.user)
+        prof_form = UserProfileForm(instance=profile)
 
     my_items = Item.objects.filter(owner=request.user).order_by("-date_reported")
-    return render(request, "account/dashboard.html", {"form": form, "my_items": my_items})
+
+    return render(
+        request,
+        "account/dashboard.html",
+        {
+            "user_form": user_form,
+            "profile_form": prof_form,
+            "my_items": my_items,
+        },
+    )
 
 @login_required
 def item_update(request, pk):
-    """Owner-only edit."""
     item = get_object_or_404(Item, pk=pk)
     if not (request.user.is_staff or item.owner_id == request.user.id):
         return HttpResponseForbidden("You can only edit your own items.")
@@ -156,12 +169,7 @@ def notification_mark_read(request, notif_id):
 
 @staff_member_required
 def review_items(request):
-    """
-    Staff-only front-end page to:
-    - Review unapproved items and approve them
-    - See potential matches for pending items
-    - See matches for approved items and update match.status
-    """
+
     pending_items = Item.objects.filter(approved=False).order_by("-date_reported")
 
     if request.method == "POST":

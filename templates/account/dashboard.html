@@ -2,12 +2,17 @@
 {% block content %}
 <h4>My Account</h4>
 
-<form method="post" style="max-width:520px;margin-bottom:2rem">
+<form method="post">
   {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Save changes</button>
-  <a href="{% url 'password_change' %}" style="margin-left:1rem">Change password</a>
+
+  <h2>Account Info</h2>
+  {{ user_form.as_p }}
+
+  {{ profile_form.as_p }}
+
+  <button type="submit">Save</button>
 </form>
+
 
 <h5>My postings</h5>
 {% if my_items %}

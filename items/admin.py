@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 from django.db import transaction
-from .models import Category, Item, Match, Message
+from .models import Category, Item, Match, Message, Profile
 from .matching import find_matches_for, explain_match
 import logging
 
@@ -95,3 +95,8 @@ class MatchAdmin(admin.ModelAdmin):
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('id','item','sender','receiver','sent_at','is_read')
     list_filter  = ('is_read',)
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "preferred_contact_method", "phone_number")
+    search_fields = ("user__username", "user__email", "phone_number")

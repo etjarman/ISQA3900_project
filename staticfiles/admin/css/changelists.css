@@ -168,13 +168,13 @@
 }
 
 #changelist-filter details > summary::before {
-    content: 'â†’';
+    content: '→';
     font-weight: bold;
     color: var(--link-hover-color);
 }
 
 #changelist-filter details[open] > summary::before {
-    content: 'â†“';
+    content: '↓';
 }
 
 #changelist-filter ul {

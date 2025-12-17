@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django import forms
-from .models import Item
+from .models import Item, Profile
 
 User = get_user_model()
 
@@ -45,3 +45,8 @@ class ProfileForm(forms.ModelForm):
 class NotifyMatchForm(forms.Form):
     title = forms.CharField(max_length=200)
     message = forms.CharField(widget=forms.Textarea(attrs={"rows": 7}))
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ["phone_number", "preferred_contact_method"]
